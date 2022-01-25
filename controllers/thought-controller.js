@@ -1,6 +1,111 @@
+const { Thought, User } = require ('../models');
 
+const thoughtController = {
+    //get every thought
+    getAllThoughts(req, res) {
+        Thought.find({})
+          .then(dbThoughtData => res.json(dbThoughtData))
+          .catch(err => {
+            console.log(err);
+            res.sendStatus(400);
+        });
+    },
+    findThoughtsById({ params }, res) {
+        Thought.findOne({ _id: params.thoughtId })
+        .then(dbThoughtData => {
+            if (!dbThoughtData) {
+                return res.status(404).json({ message: ' thoughts Not found.' });
+            }
+            res.json(dbThoughtData);
+        })
+        .catch(err => res.status(500).json(err));
+    },
+ 
+    //create thought 
+    createThoughts({ body }, res) {
+        console.log(body)
+        Thought.create(body)
+            .then((dbThoughtData) => {        
+                return User.findOneAndUpdate( 
+                    { _id: body.userId },
+                    { $push: { thoughts: dbThoughtData._id } },
+                    { new: true }
+                )
+                    .select('-__v');
+            })
+            .then(dbUserData => {
+                if (!dbUserData) {
+                    res.status(404).json({ message: 'Users not found with keyed id' });
+                    return;
+                }
+                console.log(dbUserData)
+                res.json(dbUserData);
+            })
+            .catch(err => res.json(err));
+    },
+    // Update every thought
+    updateThoughts({ params, body }, res) {
+        Thought.findOneAndUpdate({ _id: params.id }, body, { new: true })
+            .then(dbThoughtData => {
+                if (!dbThoughtData) {
+                    res.status(404).json({ message: 'Thought not found with keyed id' });
+                    return;
+                }
+                res.json(dbThoughtData);
+            })
+            .catch(err => res.status(400).json(err));
+    },
+    //Remove  thought  by deleting ( CRUD OPERATION )
+    deleteThoughts({ params }, res) {
+        Thought.findOneAndDelete({ _id: params.id })
+            .then(dbThoughtData => {
+                if (!dbThoughtData) {
+                    res.status(404).json({ message: 'Thought not found with keyed id' });
+                    return;
+                }
+                res.json(dbThoughtData);
+            })
+            .catch(err => res.status(400).json(err));
+    },
 
+    // Create Reaction ( CRUD Operation )
+    createReactions({ params, body }, res) {
+        Thought.findOneAndUpdate(
+            { _id: params.thoughtId },
+            { $push: { reactions: body } },
+            { new: true }
+        )
+            .then(dbThoughtData => {
+                if (!dbThoughtData) {
+                    res.status(404).json({ message: 'Thought not found with keyed id' });
+                    return;
+                }
+                res.json(dbThoughtData)
+            })
+            .catch(err => res.json(err));
+    },
+    //Remove Reaction with CURD operation from
+    deleteReactions({ params }, res) {
+        console.log(params)
+        Thought.findOneAndUpdate(
+            { _id: params.thoughtId },
+            { $pull: { reactions: { reactionId: params.reactionId } } },
+            { new: true }
+        )
+            .then(dbThoughtData => {
+                if (!dbThoughtData) {
+                    res.status(404).json({ message: 'No thought found with this ID.'});
+                    return;
+                }
+                res.json(dbThoughtData);
+            })
+            .catch(err => res.json(err));
+    }
+}
 
+module.exports = thoughtController;
+
+//TEST CODES BELOW
 // const { User, Thought } = require("../models");
 
 // const controllerForThought = {
