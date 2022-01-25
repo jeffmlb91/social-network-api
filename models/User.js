@@ -1,7 +1,7 @@
 const { Schema, model } = require('mongoose');
 const moment = require('moment');
 
-const userSchema = new Schema (
+const UserSchema = new Schema (
     {
         username: {
             type: String,
@@ -10,7 +10,7 @@ const userSchema = new Schema (
             trim: true
         },
         email: {
-            typw: string,
+            type: String,
             unique: true,
             required: true,
             match: [/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/]
@@ -39,7 +39,7 @@ const userSchema = new Schema (
 // Create User model
 const User = model('User', UserSchema);
 
-UserSchema.virtuals('friendCount').get(function() {
+UserSchema.virtual('friendCount').get(function() {
     return this.friend.length;
 })
 
